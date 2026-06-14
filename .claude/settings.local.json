@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(flutter analyze *)",
-      "PowerShell(\\(Get-Command mvn -ErrorAction SilentlyContinue\\).Source; $env:JAVA_HOME; $env:M2_HOME; Get-ChildItem \"C:\\\\Program Files\\\\Java\" -ErrorAction SilentlyContinue | Select Name; Get-ChildItem \"$env:USERPROFILE\\\\.m2\" -ErrorAction SilentlyContinue | Select Name)"
+      "PowerShell(\\(Get-Command mvn -ErrorAction SilentlyContinue\\).Source; $env:JAVA_HOME; $env:M2_HOME; Get-ChildItem \"C:\\\\Program Files\\\\Java\" -ErrorAction SilentlyContinue | Select Name; Get-ChildItem \"$env:USERPROFILE\\\\.m2\" -ErrorAction SilentlyContinue | Select Name)",
+      "Bash(node -e \"const lock = require\\('./package-lock.json'\\); const z = lock.packages['node_modules/zone.js'] || lock.packages['zone.js']; console.log\\(JSON.stringify\\(z ? {version: z.version, resolved: z.resolved} : 'not found'\\)\\)\")",
+      "Bash(node -e \"try { const pkg = require\\('./node_modules/zone.js/package.json'\\); console.log\\(pkg.version\\); } catch\\(e\\) { console.log\\('not in node_modules:', e.message\\); }\")"
     ]
   }
 }

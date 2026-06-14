@@ -29,3 +29,7 @@ ai-service/.venv/
 
 node_modules/
 /node_modules/
+
+# Docker
+docker/volumes/
+
