@@ -1,0 +1,178 @@
+<div class="page-header">
+  <h1>Commerciaux</h1>
+  <p>Gestion de l'équipe commerciale</p>
+</div>
+
+@if (error() && !showForm()) {
+  <div class="alert alert-error">{{ error() }}</div>
+}
+
+<div class="card">
+  <div class="toolbar">
+    <span class="count">{{ commerciaux().length }} commercial(aux)</span>
+    @if (canWrite) {
+      <button class="btn btn-primary btn-sm" (click)="openCreate()">+ Nouveau commercial</button>
+    }
+  </div>
+
+  @if (loading()) {
+    <div class="loading-state"><span class="spinner"></span> Chargement…</div>
+  } @else if (commerciaux().length === 0) {
+    <div class="empty-state">Aucun commercial enregistré.</div>
+  } @else {
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Nom</th>
+            <th>Prénom</th>
+            <th>Identifiant</th>
+            <th>Téléphone</th>
+            <th>Zone</th>
+            <th>Compétences</th>
+            @if (canWrite) { <th>Actions</th> }
+          </tr>
+        </thead>
+        <tbody>
+          @for (c of commerciaux(); track c.id) {
+            <tr>
+              <td><strong>{{ c.nom }}</strong></td>
+              <td>{{ c.prenom }}</td>
+              <td class="username-cell">{{ c.username ?? '—' }}</td>
+              <td>{{ c.telephone ?? '—' }}</td>
+              <td>{{ c.zone?.nom ?? '—' }}</td>
+              <td>
+                @for (cp of c.competences; track cp.id) {
+                  <span class="badge">{{ cp.nom }}</span>
+                }
+                @if (c.competences.length === 0) { <span class="muted">—</span> }
+              </td>
+              @if (canWrite) {
+                <td class="actions-cell">
+                  @if (deleteConfirmId() === c.id) {
+                    <span class="confirm-text">Supprimer ?</span>
+                    <button class="btn btn-danger btn-sm" (click)="confirmDelete(c.id)">Oui</button>
+                    <button class="btn btn-ghost btn-sm" (click)="cancelDelete()">Non</button>
+                  } @else {
+                    <button class="btn btn-ghost btn-sm" (click)="openEdit(c)">Éditer</button>
+                    <button class="btn btn-danger btn-sm" (click)="askDelete(c.id)">Supprimer</button>
+                  }
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
+
+@if (showForm()) {
+  <div class="overlay" (click)="cancelForm()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>{{ editingId() ? 'Modifier le commercial' : 'Nouveau commercial' }}</h2>
+        <button class="btn btn-ghost btn-sm" (click)="cancelForm()">✕</button>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="submit()">
+        <div class="modal-body">
+          @if (error()) {
+            <div class="alert alert-error">{{ error() }}</div>
+          }
+
+          <!-- Identité -->
+          <div class="form-row">
+            <div class="field">
+              <label>Nom *</label>
+              <input formControlName="nom" type="text" placeholder="Dupont" />
+              @if (form.get('nom')?.invalid && form.get('nom')?.touched) {
+                <span class="field-error">Champ requis</span>
+              }
+            </div>
+            <div class="field">
+              <label>Prénom *</label>
+              <input formControlName="prenom" type="text" placeholder="Jean" />
+              @if (form.get('prenom')?.invalid && form.get('prenom')?.touched) {
+                <span class="field-error">Champ requis</span>
+              }
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Téléphone</label>
+            <input formControlName="telephone" type="tel" placeholder="+216 XX XXX XXX" />
+          </div>
+
+          <!-- Compte de connexion -->
+          <div class="form-row">
+            <div class="field">
+              <label>Identifiant (username) *</label>
+              <input formControlName="username" type="text" placeholder="jean.dupont" autocomplete="username" />
+              @if (form.get('username')?.invalid && form.get('username')?.touched) {
+                <span class="field-error">Champ requis</span>
+              }
+            </div>
+            <div class="field">
+              <label>Email *</label>
+              <input formControlName="email" type="email" placeholder="jean@exemple.com" autocomplete="email" />
+              @if (form.get('email')?.errors?.['required'] && form.get('email')?.touched) {
+                <span class="field-error">Champ requis</span>
+              }
+              @if (form.get('email')?.errors?.['email'] && form.get('email')?.touched) {
+                <span class="field-error">Email invalide</span>
+              }
+            </div>
+          </div>
+
+          <div class="field">
+            <label>
+              Mot de passe
+              @if (!editingId()) { <span class="required-mark">*</span> }
+              @if (editingId()) { <span class="field-hint">(laisser vide pour ne pas changer)</span> }
+            </label>
+            <input formControlName="password" type="password" placeholder="••••••••" autocomplete="new-password" />
+            @if (form.get('password')?.invalid && form.get('password')?.touched) {
+              <span class="field-error">Mot de passe requis</span>
+            }
+          </div>
+
+          <!-- Organisation -->
+          <div class="field">
+            <label>Zone</label>
+            <select formControlName="zoneId">
+              <option [value]="null">— Aucune zone —</option>
+              @for (z of zones(); track z.id) {
+                <option [value]="z.id">{{ z.nom }}</option>
+              }
+            </select>
+          </div>
+
+          @if (competences().length > 0) {
+            <div class="field">
+              <label>Compétences</label>
+              <div class="checkbox-group">
+                @for (cp of competences(); track cp.id) {
+                  <label class="checkbox-item">
+                    <input type="checkbox"
+                      [checked]="isCompSelected(cp.id)"
+                      (change)="toggleComp(cp.id)" />
+                    {{ cp.nom }}
+                  </label>
+                }
+              </div>
+            </div>
+          }
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" (click)="cancelForm()">Annuler</button>
+          <button type="submit" class="btn btn-primary" [disabled]="saving()">
+            @if (saving()) { <span class="spinner"></span> }
+            {{ editingId() ? 'Enregistrer' : 'Créer' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

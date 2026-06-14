@@ -1,0 +1,49 @@
+<div class="login-layout">
+  <div class="login-card">
+    <div class="login-header">
+      <span class="brand-mark">S</span>
+      <h1>SmartSales</h1>
+      <p>Connectez-vous à votre espace</p>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate class="login-form">
+
+      @if (errorMessage()) {
+        <div class="alert-error" role="alert">{{ errorMessage() }}</div>
+      }
+
+      <div class="field">
+        <label for="username">Nom d'utilisateur</label>
+        <input
+          id="username"
+          type="text"
+          formControlName="username"
+          [class.is-invalid]="u.invalid && u.touched"
+          autocomplete="username"
+          placeholder="Nom d'utilisateur" />
+        @if (u.invalid && u.touched) {
+          <span class="field-error">Ce champ est requis.</span>
+        }
+      </div>
+
+      <div class="field">
+        <label for="password">Mot de passe</label>
+        <input
+          id="password"
+          type="password"
+          formControlName="password"
+          [class.is-invalid]="p.invalid && p.touched"
+          autocomplete="current-password"
+          placeholder="••••••••" />
+        @if (p.invalid && p.touched) {
+          <span class="field-error">Ce champ est requis.</span>
+        }
+      </div>
+
+      <button type="submit" class="btn-primary" [disabled]="loading()">
+        @if (loading()) { Connexion en cours… } @else { Se connecter }
+      </button>
+
+    </form>
+  </div>
+</div>

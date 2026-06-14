@@ -1,0 +1,63 @@
+<!-- Chargement -->
+@if (loading()) {
+  <div class="loading-state" style="margin-top:1.5rem">
+    <span class="spinner"></span> Chargement des graphiques…
+  </div>
+}
+
+<!-- Erreur -->
+@else if (erreur()) {
+  <div class="alert alert-error" style="margin-top:1.5rem">{{ erreur() }}</div>
+}
+
+<!-- Graphiques -->
+@else {
+  <div class="charts-section">
+    <h2 class="charts-heading">Analyse de l'équipe</h2>
+
+    <div class="charts-grid">
+
+      <!-- 1. Barres : CA par commercial -->
+      <div class="chart-card">
+        <p class="chart-title">CA par commercial — mois courant</p>
+        <div class="chart-canvas-wrap">
+          <canvas #canvasBarCA></canvas>
+          @if (barVide) {
+            <div class="chart-empty">Pas de données pour cette période</div>
+          }
+        </div>
+      </div>
+
+      <!-- 2. Doughnut : visites par statut -->
+      <div class="chart-card">
+        <p class="chart-title">Répartition des visites par statut</p>
+        <div class="chart-canvas-wrap">
+          <canvas #canvasDoughnutStatut></canvas>
+          @if (statutVide) {
+            <div class="chart-empty">Pas de données</div>
+          }
+        </div>
+      </div>
+
+      <!-- 3. Doughnut : visites par type -->
+      <div class="chart-card">
+        <p class="chart-title">Répartition des visites par type</p>
+        <div class="chart-canvas-wrap">
+          <canvas #canvasDoughnutType></canvas>
+          @if (typeVide) {
+            <div class="chart-empty">Pas de données</div>
+          }
+        </div>
+      </div>
+
+      <!-- 4. Courbe : CA équipe sur 6 mois -->
+      <div class="chart-card">
+        <p class="chart-title">Évolution du CA équipe — 6 derniers mois</p>
+        <div class="chart-canvas-wrap">
+          <canvas #canvasLineCA></canvas>
+        </div>
+      </div>
+
+    </div>
+  </div>
+}

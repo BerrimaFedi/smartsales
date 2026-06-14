@@ -1,0 +1,210 @@
+.filters-bar {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  margin-bottom: 1rem;
+
+  .field { min-width: 160px; flex: 1; }
+}
+
+.summary-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.summary-card {
+  flex: 1;
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1rem 1.25rem;
+  text-align: center;
+}
+
+.summary-val {
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.summary-lbl {
+  font-size: .775rem;
+  color: var(--color-text-muted);
+  margin-top: .2rem;
+}
+
+.chart-card {
+  margin-bottom: 1rem;
+}
+
+.chart-title {
+  font-size: .875rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  margin-bottom: .75rem;
+}
+
+.chart-svg {
+  width: 100%;
+  height: 220px;
+  display: block;
+}
+
+.table-wrap { overflow-x: auto; }
+
+.ca-cell {
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.toolbar-action {
+  display: flex;
+  align-items: flex-end;
+}
+
+.actions-cell {
+  display: flex;
+  gap: .4rem;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.confirm-text {
+  font-size: .8rem;
+  color: #dc2626;
+  font-weight: 500;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.badge-calcule {
+  background: #d1fae5;
+  color: #065f46;
+  font-size: .72rem;
+  padding: .15rem .55rem;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.badge-manuel {
+  background: #fef3c7;
+  color: #92400e;
+  font-size: .72rem;
+  padding: .15rem .55rem;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+/* Badges de tendance IA */
+.badge-hausse {
+  background: #d1fae5;
+  color: #065f46;
+  font-size: .8rem;
+  padding: .2rem .65rem;
+  border-radius: 999px;
+  font-weight: 700;
+}
+
+.badge-baisse {
+  background: #fee2e2;
+  color: #991b1b;
+  font-size: .8rem;
+  padding: .2rem .65rem;
+  border-radius: 999px;
+  font-weight: 700;
+}
+
+.badge-stable {
+  background: #e0e7ff;
+  color: #3730a3;
+  font-size: .8rem;
+  padding: .2rem .65rem;
+  border-radius: 999px;
+  font-weight: 700;
+}
+
+/* Panneau Analyse IA */
+.analyse-ia-card {
+  margin-bottom: 1rem;
+}
+
+.analyse-ia-header {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  margin-bottom: .75rem;
+}
+
+.analyse-ia-titre {
+  font-size: .9rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.analyse-ia-body {
+  display: flex;
+  flex-direction: column;
+  gap: .6rem;
+}
+
+.analyse-ia-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.analyse-ia-taux {
+  font-size: .875rem;
+  color: var(--color-text-muted);
+}
+
+.analyse-ia-anomalie {
+  font-size: .85rem;
+}
+
+.analyse-ia-recommandations {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: .25rem;
+
+  li {
+    font-size: .875rem;
+    color: var(--color-text);
+    line-height: 1.5;
+  }
+}
+
+/* Bouton secondaire (export) */
+.btn-secondary {
+  background: var(--color-surface);
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary);
+
+  &:hover {
+    background: #eff6ff;
+  }
+}
+
+.toolbar-action {
+  gap: .5rem;
+}
+
+.alert-warning {
+  background: #fefce8;
+  border: 1px solid #fde047;
+  color: #713f12;
+  border-radius: var(--radius);
+  padding: .65rem 1rem;
+  font-size: .875rem;
+}

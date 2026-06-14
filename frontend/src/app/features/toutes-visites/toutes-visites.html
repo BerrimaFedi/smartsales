@@ -1,0 +1,102 @@
+<div class="page-header">
+  <h1>Toutes les visites</h1>
+  <p>Vue globale des visites de tous les commerciaux</p>
+</div>
+
+@if (error()) {
+  <div class="alert alert-error">{{ error() }}</div>
+}
+
+<!-- Filtres -->
+<div class="card filters-bar">
+  <div class="field">
+    <label>Commercial</label>
+    <select (change)="onCommercialFilter($event)">
+      <option value="">Tous</option>
+      @for (c of commerciaux(); track c.id) {
+        <option [value]="c.id">{{ c.prenom }} {{ c.nom }}</option>
+      }
+    </select>
+  </div>
+
+  <div class="field">
+    <label>Statut</label>
+    <select (change)="onStatutFilter($event)">
+      <option value="">Tous</option>
+      @for (s of statutOptions; track s) {
+        <option [value]="s">{{ statutLabel(s) }}</option>
+      }
+    </select>
+  </div>
+
+  <div class="field">
+    <label>Du</label>
+    <input type="date" [value]="filterDateMin()" (change)="onDateMinFilter($event)" />
+  </div>
+
+  <div class="field">
+    <label>Au</label>
+    <input type="date" [value]="filterDateMax()" (change)="onDateMaxFilter($event)" />
+  </div>
+
+  <div class="field field-action">
+    <button class="btn btn-ghost btn-sm" (click)="resetFiltres()">Réinitialiser</button>
+  </div>
+</div>
+
+<!-- Résumé -->
+@if (!loading() && filtered().length > 0) {
+  <div class="summary-row">
+    <div class="summary-card">
+      <div class="summary-val">{{ filtered().length }}</div>
+      <div class="summary-lbl">Visites affichées</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-val">{{ filtered().length - filtered().filter(v => v.statut === 'ANNULEE').length }}</div>
+      <div class="summary-lbl">Visites actives</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-val">{{ formatCA(caTotal()) }}</div>
+      <div class="summary-lbl">CA terminées</div>
+    </div>
+  </div>
+}
+
+<div class="card">
+  @if (loading()) {
+    <div class="loading-state"><span class="spinner"></span> Chargement…</div>
+  } @else if (filtered().length === 0) {
+    <div class="empty-state">Aucune visite pour les filtres sélectionnés.</div>
+  } @else {
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Commercial</th>
+            <th>Client</th>
+            <th>Type</th>
+            <th>Statut</th>
+            <th>Date et heure</th>
+            <th>Montant</th>
+            <th>Compte-rendu</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (v of filtered(); track v.id) {
+            <tr [class.row-terminee]="v.statut === 'TERMINEE'" [class.row-annulee]="v.statut === 'ANNULEE'">
+              <td class="commercial-cell">{{ v.commercialNom }}</td>
+              <td><strong>{{ v.clientNom }}</strong></td>
+              <td><span class="badge">{{ typeLabel(v.type) }}</span></td>
+              <td>
+                <span class="statut-badge statut-{{ v.statut | lowercase }}">{{ statutLabel(v.statut) }}</span>
+              </td>
+              <td class="date-cell">{{ formatDateHeure(v.dateVisite) }}</td>
+              <td class="montant-cell">{{ formatMontant(v.montant) }}</td>
+              <td class="cr-cell">{{ v.compteRendu ?? '—' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

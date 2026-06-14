@@ -1,0 +1,47 @@
+<div class="shell">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <span class="brand-mark">S</span>
+      <span class="brand-name">SmartSales</span>
+    </div>
+
+    <nav class="sidebar-nav" aria-label="Navigation principale">
+      @for (item of visibleNavItems(); track item.route) {
+        <a
+          class="nav-item"
+          [routerLink]="item.route"
+          routerLinkActive="active">
+          {{ item.label }}
+        </a>
+      }
+    </nav>
+  </aside>
+
+  <!-- Zone principale -->
+  <div class="main-area">
+    <header class="topbar">
+      <div class="topbar-left"></div>
+
+      <div class="topbar-right">
+        <div class="user-chip">
+          <span class="user-avatar">{{ userInitial() }}</span>
+          <div class="user-meta">
+            <span class="user-name">{{ currentUser()?.username }}</span>
+            <span class="user-role">{{ roleLabel() }}</span>
+          </div>
+        </div>
+        <app-notifications />
+        <button class="btn-logout" type="button" (click)="logout()">Déconnexion</button>
+      </div>
+    </header>
+
+    <main class="page-content">
+      <router-outlet />
+    </main>
+  </div>
+
+</div>
+
+<app-chatbot />

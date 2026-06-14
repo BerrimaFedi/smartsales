@@ -1,0 +1,131 @@
+<div class="page-header">
+  <h1>Clients</h1>
+  <p>Répertoire et localisation des clients</p>
+</div>
+
+@if (error()) {
+  <div class="alert alert-error">{{ error() }}</div>
+}
+
+<div class="card">
+  <div class="toolbar">
+    <span class="count">{{ clients().length }} client(s)</span>
+    @if (canWrite) {
+      <button class="btn btn-primary btn-sm" (click)="openCreate()">+ Nouveau client</button>
+    }
+  </div>
+
+  @if (loading()) {
+    <div class="loading-state"><span class="spinner"></span> Chargement…</div>
+  } @else if (clients().length === 0) {
+    <div class="empty-state">Aucun client enregistré.</div>
+  } @else {
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Nom</th>
+            <th>Adresse</th>
+            <th>Téléphone</th>
+            <th>Zone</th>
+            <th>Latitude</th>
+            <th>Longitude</th>
+            @if (canWrite) { <th>Actions</th> }
+          </tr>
+        </thead>
+        <tbody>
+          @for (c of clients(); track c.id) {
+            <tr>
+              <td><strong>{{ c.nom }}</strong></td>
+              <td>{{ c.adresse ?? '—' }}</td>
+              <td>{{ c.telephone ?? '—' }}</td>
+              <td>{{ c.zone?.nom ?? '—' }}</td>
+              <td class="coord">{{ formatCoord(c.latitude) }}</td>
+              <td class="coord">{{ formatCoord(c.longitude) }}</td>
+              @if (canWrite) {
+                <td class="actions-cell">
+                  @if (deleteConfirmId() === c.id) {
+                    <span class="confirm-text">Supprimer ?</span>
+                    <button class="btn btn-danger btn-sm" (click)="confirmDelete(c.id)">Oui</button>
+                    <button class="btn btn-ghost btn-sm" (click)="cancelDelete()">Non</button>
+                  } @else {
+                    <button class="btn btn-ghost btn-sm" (click)="openEdit(c)">Éditer</button>
+                    <button class="btn btn-danger btn-sm" (click)="askDelete(c.id)">Supprimer</button>
+                  }
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
+
+@if (showForm()) {
+  <div class="overlay" (click)="cancelForm()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>{{ editingId() ? 'Modifier le client' : 'Nouveau client' }}</h2>
+        <button class="btn btn-ghost btn-sm" (click)="cancelForm()">✕</button>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="submit()">
+        <div class="modal-body">
+          @if (error()) {
+            <div class="alert alert-error">{{ error() }}</div>
+          }
+
+          <div class="field">
+            <label>Nom *</label>
+            <input formControlName="nom" type="text" placeholder="Société XYZ" />
+            @if (form.get('nom')?.invalid && form.get('nom')?.touched) {
+              <span class="field-error">Champ requis</span>
+            }
+          </div>
+
+          <div class="field">
+            <label>Adresse</label>
+            <input formControlName="adresse" type="text" placeholder="Rue de la République, Tunis" />
+          </div>
+
+          <div class="field">
+            <label>Téléphone</label>
+            <input formControlName="telephone" type="tel" placeholder="+216 XX XXX XXX" />
+          </div>
+
+          <div class="field">
+            <label>Zone</label>
+            <select formControlName="zoneId">
+              <option [value]="null">— Aucune zone —</option>
+              @for (z of zones(); track z.id) {
+                <option [value]="z.id">{{ z.nom }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-row">
+            <div class="field">
+              <label>Latitude</label>
+              <input formControlName="latitude" type="number" step="0.0001" placeholder="36.8065" />
+              <span class="field-hint">Ex : 36.8065 (Tunis)</span>
+            </div>
+            <div class="field">
+              <label>Longitude</label>
+              <input formControlName="longitude" type="number" step="0.0001" placeholder="10.1815" />
+              <span class="field-hint">Ex : 10.1815 (Tunis)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" (click)="cancelForm()">Annuler</button>
+          <button type="submit" class="btn btn-primary" [disabled]="saving()">
+            @if (saving()) { <span class="spinner"></span> }
+            {{ editingId() ? 'Enregistrer' : 'Créer' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

@@ -1,0 +1,88 @@
+<div class="page-header">
+  <h1>Compétences</h1>
+  <p>Gestion des compétences des commerciaux</p>
+</div>
+
+@if (error() && !showForm()) {
+  <div class="alert alert-error">{{ error() }}</div>
+}
+
+<div class="card">
+  <div class="toolbar">
+    <span class="count">{{ competences().length }} compétence(s)</span>
+    @if (canWrite) {
+      <button class="btn btn-primary btn-sm" (click)="openCreate()">+ Nouvelle compétence</button>
+    }
+  </div>
+
+  @if (loading()) {
+    <div class="loading-state"><span class="spinner"></span> Chargement…</div>
+  } @else if (competences().length === 0) {
+    <div class="empty-state">Aucune compétence enregistrée.</div>
+  } @else {
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Nom</th>
+            @if (canWrite) { <th>Actions</th> }
+          </tr>
+        </thead>
+        <tbody>
+          @for (c of competences(); track c.id) {
+            <tr>
+              <td><strong>{{ c.nom }}</strong></td>
+              @if (canWrite) {
+                <td class="actions-cell">
+                  @if (deleteConfirmId() === c.id) {
+                    <span class="confirm-text">Supprimer ?</span>
+                    <button class="btn btn-danger btn-sm" (click)="confirmDelete(c.id)">Oui</button>
+                    <button class="btn btn-ghost btn-sm" (click)="cancelDelete()">Non</button>
+                  } @else {
+                    <button class="btn btn-ghost btn-sm" (click)="openEdit(c)">Éditer</button>
+                    <button class="btn btn-danger btn-sm" (click)="askDelete(c.id)">Supprimer</button>
+                  }
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
+
+@if (showForm()) {
+  <div class="overlay" (click)="cancelForm()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>{{ editingId() ? 'Modifier la compétence' : 'Nouvelle compétence' }}</h2>
+        <button class="btn btn-ghost btn-sm" (click)="cancelForm()">✕</button>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="submit()">
+        <div class="modal-body">
+          @if (error()) {
+            <div class="alert alert-error">{{ error() }}</div>
+          }
+
+          <div class="field">
+            <label>Nom *</label>
+            <input formControlName="nom" type="text" placeholder="Ex : Négociation B2B" />
+            @if (form.get('nom')?.invalid && form.get('nom')?.touched) {
+              <span class="field-error">Champ requis</span>
+            }
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" (click)="cancelForm()">Annuler</button>
+          <button type="submit" class="btn btn-primary" [disabled]="saving()">
+            @if (saving()) { <span class="spinner"></span> }
+            {{ editingId() ? 'Enregistrer' : 'Créer' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

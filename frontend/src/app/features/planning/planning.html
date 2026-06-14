@@ -1,0 +1,350 @@
+<div class="page-header">
+  <h1>Planning</h1>
+  <p>Gestion et optimisation des tournées</p>
+</div>
+
+@if (error()) {
+  <div class="alert alert-error">{{ error() }}</div>
+}
+
+<!-- Sélecteurs -->
+<div class="card selectors">
+  @if (isManager) {
+    <div class="field">
+      <label>Commercial</label>
+      <select (change)="onCommercialChange($event)">
+        <option value="">— Sélectionner un commercial —</option>
+        @for (c of commerciaux(); track c.id) {
+          <option [value]="c.id">{{ c.prenom }} {{ c.nom }}</option>
+        }
+      </select>
+    </div>
+  }
+  <div class="field">
+    <label>Date</label>
+    <input type="date" [value]="selectedDate()" (change)="onDateChange($event)" />
+  </div>
+  @if (isManager) {
+    <div class="action-buttons">
+      <button class="btn btn-secondary btn-sm" (click)="openVisiteForm()">+ Ajouter une visite</button>
+      <button class="btn btn-primary btn-sm" (click)="openAffectationModal()">Affectation automatique</button>
+      @if (selectedCommercialId()) {
+        <button class="btn btn-warning btn-sm" (click)="openReaffectationModal()">Réaffecter les visites</button>
+      }
+    </div>
+  }
+</div>
+
+<!-- Résultat optimisation -->
+@if (distanceTotale() !== null) {
+  <div class="alert alert-info distance-banner">
+    Tournée optimisée — distance totale : <strong>{{ distanceTotale()!.toFixed(1) }} km</strong>
+  </div>
+}
+
+@if (aiError()) {
+  <div class="alert alert-warning">
+    Le service d'optimisation est temporairement indisponible (503). La liste reste dans l'ordre initial.
+  </div>
+}
+
+<div class="planning-layout">
+  <!-- Liste des visites -->
+  <div class="visits-panel card">
+    <div class="panel-header">
+      <span class="panel-title">
+        @if (optimizedVisites()) { Ordre optimisé } @else { Visites du jour }
+      </span>
+      @if (visites().length > 0 && !optimizing()) {
+        <button class="btn btn-primary btn-sm" (click)="optimiser()" [disabled]="optimizing()">
+          Optimiser la tournée
+        </button>
+      }
+      @if (optimizing()) {
+        <span class="opt-loading"><span class="spinner"></span> Optimisation…</span>
+      }
+    </div>
+
+    @if (loading()) {
+      <div class="loading-state"><span class="spinner"></span> Chargement…</div>
+    } @else if (!selectedCommercialId()) {
+      <div class="empty-state">Sélectionnez un commercial pour afficher les visites.</div>
+    } @else if (displayVisites().length === 0) {
+      <div class="empty-state">Aucune visite planifiée pour ce jour.</div>
+    } @else {
+      <ol class="visit-list">
+        @for (v of displayVisites(); track v.id; let i = $index) {
+          <li class="visit-item" [class.visit-done]="v.statut === 'TERMINEE'" [class.visit-cancelled]="v.statut === 'ANNULEE'">
+            <span class="visit-num">{{ i + 1 }}</span>
+            <div class="visit-body">
+              <div class="visit-client">{{ v.clientNom }}</div>
+              <div class="visit-meta">
+                <span class="badge">{{ typeLabel(v.type) }}</span>
+                <span class="statut-badge statut-{{ v.statut | lowercase }}">{{ statutLabel(v.statut) }}</span>
+                <span class="visit-time">{{ formatHeure(v.dateVisite) }}</span>
+              </div>
+            </div>
+          </li>
+        }
+      </ol>
+    }
+  </div>
+
+  <!-- Carte Leaflet -->
+  <div class="map-panel">
+    <div #mapEl class="map-container"></div>
+  </div>
+</div>
+
+<!-- ====================================================================== -->
+<!-- Modal : Ajouter une visite (commercial optionnel pour manager)          -->
+<!-- ====================================================================== -->
+@if (showVisiteForm()) {
+  <div class="overlay" (click)="cancelVisiteForm()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Ajouter une visite</h2>
+        <button class="btn btn-ghost btn-sm" (click)="cancelVisiteForm()">✕</button>
+      </div>
+      <form [formGroup]="visiteForm" (ngSubmit)="submitVisite()">
+        <div class="modal-body">
+
+          <!-- Commercial (optionnel pour manager → visite non assignée) -->
+          @if (isManager) {
+            <div class="field">
+              <label>Commercial <span class="field-hint">(optionnel — laisser vide pour visite non assignée)</span></label>
+              <select formControlName="commercialId">
+                <option [value]="null">— Non assignée —</option>
+                @for (c of commerciaux(); track c.id) {
+                  <option [value]="c.id">{{ c.prenom }} {{ c.nom }}</option>
+                }
+              </select>
+            </div>
+          }
+
+          <div class="field">
+            <label>Client *</label>
+            <select formControlName="clientId">
+              <option [value]="null">— Sélectionner —</option>
+              @for (c of clients(); track c.id) {
+                <option [value]="c.id">{{ c.nom }}</option>
+              }
+            </select>
+            @if (visiteForm.get('clientId')?.invalid && visiteForm.get('clientId')?.touched) {
+              <span class="field-error">Champ requis</span>
+            }
+          </div>
+
+          <div class="form-row">
+            <div class="field">
+              <label>Type *</label>
+              <select formControlName="type">
+                @for (t of typeOptions; track t) {
+                  <option [value]="t">{{ typeLabel(t) }}</option>
+                }
+              </select>
+            </div>
+            <div class="field">
+              <label>Statut</label>
+              <select formControlName="statut">
+                @for (s of statutOptions; track s) {
+                  <option [value]="s">{{ statutLabel(s) }}</option>
+                }
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="field">
+              <label>Date *</label>
+              <input formControlName="dateVisite" type="date" />
+            </div>
+            <div class="field">
+              <label>Heure *</label>
+              <input formControlName="heure" type="time" />
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" (click)="cancelVisiteForm()">Annuler</button>
+          <button type="submit" class="btn btn-primary" [disabled]="savingVisite()">
+            @if (savingVisite()) { <span class="spinner"></span> }
+            Créer la visite
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+<!-- ====================================================================== -->
+<!-- Modal : Affectation automatique                                         -->
+<!-- ====================================================================== -->
+@if (showAffectationModal()) {
+  <div class="overlay" (click)="closeAffectationModal()">
+    <div class="modal-card modal-wide" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Affectation automatique</h2>
+        <button class="btn btn-ghost btn-sm" (click)="closeAffectationModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        @if (!affectationRapport()) {
+          <p class="modal-desc">
+            Répartit automatiquement toutes les visites <strong>non assignées</strong> et
+            <strong>planifiées</strong> de la date choisie entre les commerciaux
+            (critères : zone → charge → compétence négociation).
+          </p>
+          <div class="field" style="max-width:220px">
+            <label>Date</label>
+            <input type="date" [value]="affectationDate()" (change)="onAffectationDateChange($event)" />
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-ghost" (click)="closeAffectationModal()">Annuler</button>
+            <button class="btn btn-primary" (click)="lancerAffectationAuto()" [disabled]="affectationLoading()">
+              @if (affectationLoading()) { <span class="spinner"></span> }
+              Lancer l'affectation
+            </button>
+          </div>
+        } @else {
+          <!-- Rapport d'affectation -->
+          @if (affectationRapport()!.affectees.length > 0) {
+            <h3 class="rapport-title rapport-ok">Visites affectées ({{ affectationRapport()!.affectees.length }})</h3>
+            <table class="rapport-table">
+              <thead>
+                <tr><th>Visite</th><th>Client</th><th>Type</th><th>Commercial choisi</th><th>Raison</th></tr>
+              </thead>
+              <tbody>
+                @for (e of affectationRapport()!.affectees; track e.visiteId) {
+                  <tr>
+                    <td>#{{ e.visiteId }}</td>
+                    <td>{{ e.clientNom }}</td>
+                    <td><span class="badge">{{ typeLabel(e.type) }}</span></td>
+                    <td class="td-commercial">{{ e.commercialNom }}</td>
+                    <td class="td-raison">{{ e.raison }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          } @else {
+            <div class="empty-state">Aucune visite non assignée trouvée pour cette date.</div>
+          }
+
+          @if (affectationRapport()!.nonAffectables.length > 0) {
+            <h3 class="rapport-title rapport-warn">Non affectables ({{ affectationRapport()!.nonAffectables.length }})</h3>
+            <table class="rapport-table">
+              <thead>
+                <tr><th>Visite</th><th>Client</th><th>Type</th><th>Raison</th></tr>
+              </thead>
+              <tbody>
+                @for (e of affectationRapport()!.nonAffectables; track e.visiteId) {
+                  <tr class="row-warn">
+                    <td>#{{ e.visiteId }}</td>
+                    <td>{{ e.clientNom }}</td>
+                    <td><span class="badge">{{ typeLabel(e.type) }}</span></td>
+                    <td class="td-raison">{{ e.raison }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+
+          <div class="modal-footer">
+            <button class="btn btn-primary" (click)="closeAffectationModal()">Fermer et rafraîchir</button>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ====================================================================== -->
+<!-- Modal : Réaffectation dynamique                                         -->
+<!-- ====================================================================== -->
+@if (showReaffectationModal()) {
+  <div class="overlay" (click)="closeReaffectationModal()">
+    <div class="modal-card modal-wide" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Réaffecter les visites</h2>
+        <button class="btn btn-ghost btn-sm" (click)="closeReaffectationModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        @if (!reaffectationRapport()) {
+          <p class="modal-desc">
+            Sélectionnez le commercial <strong>indisponible</strong> et la date de début.
+            Ses visites planifiées/en cours seront redistribuées aux autres commerciaux
+            selon les mêmes règles (zone → charge → compétence).
+          </p>
+          <div class="form-row">
+            <div class="field">
+              <label>Commercial indisponible *</label>
+              <select [value]="reaffectationCommercialId() ?? ''" (change)="onReaffectationCommercialChange($event)">
+                <option value="">— Sélectionner —</option>
+                @for (c of commerciaux(); track c.id) {
+                  <option [value]="c.id">{{ c.prenom }} {{ c.nom }}</option>
+                }
+              </select>
+            </div>
+            <div class="field">
+              <label>À partir du</label>
+              <input type="date" [value]="reaffectationDate()" (change)="onReaffectationDateChange($event)" />
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-ghost" (click)="closeReaffectationModal()">Annuler</button>
+            <button class="btn btn-warning" (click)="lancerReaffectation()"
+                    [disabled]="reaffectationLoading() || !reaffectationCommercialId()">
+              @if (reaffectationLoading()) { <span class="spinner"></span> }
+              Réaffecter
+            </button>
+          </div>
+        } @else {
+          <!-- Rapport de réaffectation -->
+          @if (reaffectationRapport()!.affectees.length > 0) {
+            <h3 class="rapport-title rapport-ok">Visites réaffectées ({{ reaffectationRapport()!.affectees.length }})</h3>
+            <table class="rapport-table">
+              <thead>
+                <tr><th>Visite</th><th>Client</th><th>Type</th><th>Nouveau commercial</th><th>Raison</th></tr>
+              </thead>
+              <tbody>
+                @for (e of reaffectationRapport()!.affectees; track e.visiteId) {
+                  <tr>
+                    <td>#{{ e.visiteId }}</td>
+                    <td>{{ e.clientNom }}</td>
+                    <td><span class="badge">{{ typeLabel(e.type) }}</span></td>
+                    <td class="td-commercial">{{ e.commercialNom }}</td>
+                    <td class="td-raison">{{ e.raison }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          } @else {
+            <div class="empty-state">Aucune visite à réaffecter sur cette période.</div>
+          }
+
+          @if (reaffectationRapport()!.nonAffectables.length > 0) {
+            <h3 class="rapport-title rapport-warn">Non réaffectables ({{ reaffectationRapport()!.nonAffectables.length }})</h3>
+            <table class="rapport-table">
+              <thead>
+                <tr><th>Visite</th><th>Client</th><th>Type</th><th>Raison</th></tr>
+              </thead>
+              <tbody>
+                @for (e of reaffectationRapport()!.nonAffectables; track e.visiteId) {
+                  <tr class="row-warn">
+                    <td>#{{ e.visiteId }}</td>
+                    <td>{{ e.clientNom }}</td>
+                    <td><span class="badge">{{ typeLabel(e.type) }}</span></td>
+                    <td class="td-raison">{{ e.raison }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+
+          <div class="modal-footer">
+            <button class="btn btn-primary" (click)="closeReaffectationModal()">Fermer et rafraîchir</button>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+}

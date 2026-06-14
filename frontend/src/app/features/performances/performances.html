@@ -1,0 +1,304 @@
+<div class="page-header">
+  <h1>Performances</h1>
+  <p>Indicateurs de performance commerciale</p>
+</div>
+
+@if (error() && !showForm()) {
+  <div class="alert alert-error">{{ error() }}</div>
+}
+
+<!-- Filtres -->
+<div class="card filters-bar">
+  @if (isManager) {
+    <div class="field">
+      <label>Commercial</label>
+      <select (change)="onCommercialFilter($event)">
+        <option value="">Tous</option>
+        @for (c of commerciaux(); track c.id) {
+          <option [value]="c.id">{{ c.prenom }} {{ c.nom }}</option>
+        }
+      </select>
+    </div>
+  }
+  <div class="field">
+    <label>Période (AAAA-MM)</label>
+    <input type="month" [value]="filterPeriode()" (change)="onPeriodeFilter($event)" />
+  </div>
+  @if (isManager) {
+    <div class="toolbar-action">
+      <button class="btn btn-primary btn-sm" (click)="openCreate()">+ Saisie manuelle</button>
+      <button class="btn btn-secondary btn-sm" (click)="exportCsv()">↓ Exporter (CSV)</button>
+    </div>
+  }
+</div>
+
+@if (loading()) {
+  <div class="loading-state"><span class="spinner"></span> Chargement…</div>
+} @else {
+  <!-- Résumé -->
+  @if (filtered().length > 0) {
+    <div class="summary-row">
+      <div class="summary-card">
+        <div class="summary-val">{{ formatCA(totalCA()) }}</div>
+        <div class="summary-lbl">CA total</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-val">{{ totalVisites() }}</div>
+        <div class="summary-lbl">Visites totales</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-val">{{ filtered().length }}</div>
+        <div class="summary-lbl">Commerciaux</div>
+      </div>
+    </div>
+  }
+
+  <!-- Graphique CA par commercial -->
+  @if (chartBars() && chartBars()!.length > 0) {
+    <div class="card chart-card">
+      <div class="chart-title">CA par commercial — {{ filterPeriode() }}</div>
+      <svg viewBox="0 0 600 220" class="chart-svg" aria-label="Graphique CA par commercial">
+        <line x1="20" y1="180" x2="580" y2="180" stroke="#e5e7eb" stroke-width="1"/>
+        @for (bar of chartBars()!; track bar.label) {
+          <rect
+            [attr.x]="bar.x + 20"
+            [attr.y]="bar.y + 20"
+            [attr.width]="bar.width"
+            [attr.height]="bar.height"
+            fill="#2563eb"
+            rx="3"
+            opacity=".85"
+          />
+          <text
+            [attr.x]="bar.x + 20 + bar.width / 2"
+            [attr.y]="bar.y + 16"
+            text-anchor="middle"
+            font-size="9"
+            fill="#374151"
+            font-family="system-ui, sans-serif"
+          >{{ bar.value > 0 ? formatCA(bar.value) : '' }}</text>
+          <text
+            [attr.x]="bar.x + 20 + bar.width / 2"
+            y="196"
+            text-anchor="middle"
+            font-size="9"
+            fill="#6b7280"
+            font-family="system-ui, sans-serif"
+          >{{ bar.label }}</text>
+        }
+      </svg>
+    </div>
+  }
+
+  <!-- Panneau Analyse IA — manager avec commercial sélectionné -->
+  @if (isManager && filterCommercialId()) {
+    <div class="card analyse-ia-card">
+      <div class="analyse-ia-header">
+        <span class="analyse-ia-titre">Analyse IA</span>
+      </div>
+      @if (analyseLoading()) {
+        <div class="loading-state"><span class="spinner"></span> Analyse en cours…</div>
+      } @else if (analyseUnavailable()) {
+        <div class="alert alert-warning">Le service d'analyse IA est temporairement indisponible.</div>
+      } @else if (analyseError()) {
+        <div class="alert alert-error">{{ analyseError() }}</div>
+      } @else if (analyse()) {
+        <div class="analyse-ia-body">
+          <div class="analyse-ia-row">
+            <span [class]="tendanceBadgeClass(analyse()!.tendanceCA)">
+              {{ analyse()!.tendanceCA }}
+              @if (analyse()!.variationCAPct !== null) {
+                &nbsp;({{ analyse()!.variationCAPct! > 0 ? '+' : '' }}{{ analyse()!.variationCAPct!.toFixed(1) }}%)
+              }
+            </span>
+            <span class="analyse-ia-taux">
+              Taux de conversion moyen : <strong>{{ analyse()!.tauxConversionMoyen.toFixed(1) }} %</strong>
+            </span>
+          </div>
+          @if (analyse()!.anomalieDetectee) {
+            <div class="alert alert-warning analyse-ia-anomalie">
+              ⚠ {{ analyse()!.anomalieDescription }}
+            </div>
+          }
+          <ul class="analyse-ia-recommandations">
+            @for (r of analyse()!.recommandations; track r) {
+              <li>{{ r }}</li>
+            }
+          </ul>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Panneau Analyse IA — commercial (ses propres données) -->
+  @if (!isManager) {
+    <div class="card analyse-ia-card">
+      <div class="analyse-ia-header">
+        <span class="analyse-ia-titre">Analyse IA — Mes performances</span>
+      </div>
+      @if (analyseLoading()) {
+        <div class="loading-state"><span class="spinner"></span> Analyse en cours…</div>
+      } @else if (analyseUnavailable()) {
+        <div class="alert alert-warning">Le service d'analyse IA est temporairement indisponible.</div>
+      } @else if (analyseError()) {
+        <div class="alert alert-error">{{ analyseError() }}</div>
+      } @else if (analyse()) {
+        <div class="analyse-ia-body">
+          <div class="analyse-ia-row">
+            <span [class]="tendanceBadgeClass(analyse()!.tendanceCA)">
+              {{ analyse()!.tendanceCA }}
+              @if (analyse()!.variationCAPct !== null) {
+                &nbsp;({{ analyse()!.variationCAPct! > 0 ? '+' : '' }}{{ analyse()!.variationCAPct!.toFixed(1) }}%)
+              }
+            </span>
+            <span class="analyse-ia-taux">
+              Taux de conversion moyen : <strong>{{ analyse()!.tauxConversionMoyen.toFixed(1) }} %</strong>
+            </span>
+          </div>
+          @if (analyse()!.anomalieDetectee) {
+            <div class="alert alert-warning analyse-ia-anomalie">
+              ⚠ {{ analyse()!.anomalieDescription }}
+            </div>
+          }
+          <ul class="analyse-ia-recommandations">
+            @for (r of analyse()!.recommandations; track r) {
+              <li>{{ r }}</li>
+            }
+          </ul>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Tableau -->
+  <div class="card">
+    @if (filtered().length === 0) {
+      <div class="empty-state">Aucune donnée de performance pour les filtres sélectionnés.</div>
+    } @else {
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Commercial</th>
+              <th>Période</th>
+              <th>Source</th>
+              <th>CA</th>
+              <th>Visites</th>
+              <th>Terminées</th>
+              <th>Taux conversion</th>
+              @if (isManager) { <th>Actions</th> }
+            </tr>
+          </thead>
+          <tbody>
+            @for (p of filtered(); track p.commercialId) {
+              <tr>
+                <td><strong>{{ p.commercialNom }}</strong></td>
+                <td>{{ p.periode }}</td>
+                <td>
+                  @if (p.isManuel) {
+                    <span class="badge badge-manuel">Saisi</span>
+                  } @else {
+                    <span class="badge badge-calcule">Calculé</span>
+                  }
+                </td>
+                <td class="ca-cell">{{ formatCA(p.chiffreAffaires) }}</td>
+                <td>{{ p.nombreVisites }}</td>
+                <td>{{ p.nombreVisitesTerminees }}</td>
+                <td>{{ formatRate(p.tauxConversion) }}</td>
+                @if (isManager) {
+                  <td class="actions-cell">
+                    @if (p.isManuel && deleteConfirmId() === p.performanceManuelleId) {
+                      <span class="confirm-text">Supprimer ?</span>
+                      <button class="btn btn-danger btn-sm" (click)="confirmDelete(p.performanceManuelleId!)">Oui</button>
+                      <button class="btn btn-ghost btn-sm" (click)="cancelDelete()">Non</button>
+                    } @else {
+                      @if (p.isManuel) {
+                        <button class="btn btn-ghost btn-sm" (click)="openEdit(p)">Éditer</button>
+                        <button class="btn btn-danger btn-sm" (click)="askDelete(p.performanceManuelleId!)">Supprimer</button>
+                      } @else {
+                        <button class="btn btn-ghost btn-sm" (click)="openCreate()">Override</button>
+                      }
+                    }
+                  </td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+}
+
+@if (showForm()) {
+  <div class="overlay" (click)="cancelForm()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>{{ editingId() ? 'Modifier la saisie manuelle' : 'Nouvelle saisie manuelle' }}</h2>
+        <button class="btn btn-ghost btn-sm" (click)="cancelForm()">✕</button>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="submit()">
+        <div class="modal-body">
+          @if (error()) {
+            <div class="alert alert-error">{{ error() }}</div>
+          }
+
+          <div class="field">
+            <label>Commercial *</label>
+            <select formControlName="commercialId">
+              <option [value]="null">— Sélectionner —</option>
+              @for (c of commerciaux(); track c.id) {
+                <option [value]="c.id">{{ c.prenom }} {{ c.nom }}</option>
+              }
+            </select>
+            @if (form.get('commercialId')?.invalid && form.get('commercialId')?.touched) {
+              <span class="field-error">Champ requis</span>
+            }
+          </div>
+
+          <div class="field">
+            <label>Période (AAAA-MM) *</label>
+            <input formControlName="periode" type="month" />
+            @if (form.get('periode')?.invalid && form.get('periode')?.touched) {
+              <span class="field-error">Champ requis</span>
+            }
+          </div>
+
+          <div class="form-row">
+            <div class="field">
+              <label>Chiffre d'affaires (DT) *</label>
+              <input formControlName="chiffreAffaires" type="number" min="0" step="0.01" placeholder="0.00" />
+              @if (form.get('chiffreAffaires')?.invalid && form.get('chiffreAffaires')?.touched) {
+                <span class="field-error">Valeur requise ≥ 0</span>
+              }
+            </div>
+            <div class="field">
+              <label>Nombre de visites *</label>
+              <input formControlName="nombreVisites" type="number" min="0" step="1" placeholder="0" />
+              @if (form.get('nombreVisites')?.invalid && form.get('nombreVisites')?.touched) {
+                <span class="field-error">Valeur requise ≥ 0</span>
+              }
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Taux de conversion (0 – 100 %) *</label>
+            <input formControlName="tauxConversion" type="number" min="0" max="100" step="0.1" placeholder="0.0" />
+            @if (form.get('tauxConversion')?.invalid && form.get('tauxConversion')?.touched) {
+              <span class="field-error">Valeur requise entre 0 et 100</span>
+            }
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" (click)="cancelForm()">Annuler</button>
+          <button type="submit" class="btn btn-primary" [disabled]="saving()">
+            @if (saving()) { <span class="spinner"></span> }
+            {{ editingId() ? 'Enregistrer' : 'Créer' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

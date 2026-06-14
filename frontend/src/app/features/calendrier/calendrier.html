@@ -1,0 +1,76 @@
+<div class="page-header">
+  <h1>Calendrier des visites</h1>
+  <p>Visualisation jour / semaine / mois</p>
+</div>
+
+@if (error()) {
+  <div class="alert alert-error">{{ error() }}</div>
+}
+
+<div class="legend">
+  @for (item of legendItems; track item[0]) {
+    <span class="legend-item">
+      <span class="legend-dot" [style.background]="item[1]"></span>
+      {{ STATUT_LABELS[item[0]] }}
+    </span>
+  }
+</div>
+
+@if (isManager) {
+  <div class="filter-bar">
+    <label for="filterCommercial">Commercial :</label>
+    <select id="filterCommercial" (change)="onCommercialFilter($event)">
+      <option value="">Tous</option>
+      @for (c of commerciaux(); track c.id) {
+        <option [value]="c.id">{{ c.prenom }} {{ c.nom }}</option>
+      }
+    </select>
+  </div>
+}
+
+<div class="card calendar-card">
+  @if (loading()) {
+    <div class="loading-state"><span class="spinner"></span> Chargement…</div>
+  }
+  <div #calendarEl [class.fc-hidden]="loading()"></div>
+</div>
+
+@if (selectedVisite(); as v) {
+  <div class="overlay" (click)="closeDetail()">
+    <div class="detail-panel" (click)="$event.stopPropagation()">
+      <div class="detail-header">
+        <div>
+          <h2>{{ v.clientNom }}</h2>
+          <span class="detail-badge" [style.background]="STATUT_COLORS[v.statut]">
+            {{ STATUT_LABELS[v.statut] }}
+          </span>
+        </div>
+        <button class="btn btn-ghost btn-sm" (click)="closeDetail()">✕</button>
+      </div>
+      <div class="detail-body">
+        <div class="detail-row">
+          <span class="detail-label">Date</span>
+          <span>{{ formatDateHeure(v.dateVisite) }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Type</span>
+          <span>{{ TYPE_LABELS[v.type] }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Commercial</span>
+          <span>{{ v.commercialNom }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Montant</span>
+          <span>{{ formatMontant(v.montant) }}</span>
+        </div>
+        @if (v.compteRendu) {
+          <div class="detail-row detail-row--block">
+            <span class="detail-label">Compte-rendu</span>
+            <p class="detail-cr">{{ v.compteRendu }}</p>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+}

@@ -1,0 +1,71 @@
+<div class="notif-wrapper">
+
+  <!-- Bouton cloche avec badge -->
+  <button
+    class="notif-bell"
+    type="button"
+    (click)="toggle()"
+    [class.open]="isOpen()"
+    aria-label="Notifications"
+    [attr.aria-expanded]="isOpen()">
+    <span class="bell-icon">🔔</span>
+    @if (count() > 0) {
+      <span class="notif-badge">{{ count() > 99 ? '99+' : count() }}</span>
+    }
+  </button>
+
+  <!-- Panneau déroulant -->
+  @if (isOpen()) {
+    <div class="notif-panel" role="dialog" aria-label="Notifications">
+
+      <div class="notif-header">
+        <span class="notif-title">Notifications</span>
+        @if (count() > 0) {
+          <span class="notif-count-chip">{{ count() }}</span>
+        }
+      </div>
+
+      <div class="notif-body">
+
+        <!-- Chargement -->
+        @if (loading()) {
+          <div class="notif-state">
+            <span class="spinner"></span>
+            <span>Chargement…</span>
+          </div>
+        }
+
+        <!-- Erreur -->
+        @if (!loading() && erreur()) {
+          <div class="notif-error">{{ erreur() }}</div>
+        }
+
+        <!-- Liste vide -->
+        @if (!loading() && !erreur() && items().length === 0) {
+          <div class="notif-state notif-empty">
+            <span>✅</span>
+            <span>Aucune notification</span>
+          </div>
+        }
+
+        <!-- Liste des notifications -->
+        @if (!loading() && !erreur() && items().length > 0) {
+          @for (item of items(); track item.date + item.type + item.message) {
+            <div class="notif-item" [class.notif-warning]="item.severite === 'warning'">
+              <span class="notif-icone">{{ icone(item.type) }}</span>
+              <div class="notif-content">
+                <span class="notif-item-titre">{{ item.titre }}</span>
+                <span class="notif-item-msg">{{ item.message }}</span>
+                <span class="notif-item-date">
+                  {{ item.date | date:'dd/MM/yyyy HH:mm' }}
+                </span>
+              </div>
+            </div>
+          }
+        }
+
+      </div>
+    </div>
+  }
+
+</div>

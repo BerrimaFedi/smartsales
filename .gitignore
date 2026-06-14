@@ -26,3 +26,6 @@ ai-service/.venv/
 
 # Secrets
 *.env
+
+node_modules/
+/node_modules/

@@ -1,0 +1,64 @@
+.filters-bar {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  margin-bottom: 1rem;
+
+  .field { min-width: 140px; flex: 1; }
+  .field-action { flex: 0 0 auto; min-width: auto; }
+}
+
+.summary-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.summary-card {
+  flex: 1;
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1rem 1.25rem;
+  text-align: center;
+}
+
+.summary-val {
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.summary-lbl {
+  font-size: .775rem;
+  color: var(--color-text-muted);
+  margin-top: .2rem;
+}
+
+.table-wrap { overflow-x: auto; }
+
+.commercial-cell {
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.date-cell { white-space: nowrap; }
+
+.montant-cell {
+  font-weight: 600;
+  color: var(--color-primary);
+  white-space: nowrap;
+}
+
+.cr-cell {
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-text-muted);
+  font-size: .875rem;
+}
+
+.row-terminee { background: #f0fdf4; }
+.row-annulee  { opacity: .6; }
