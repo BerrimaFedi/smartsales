@@ -249,10 +249,6 @@ smartsales/
 
 ---
 
-## Auteur
-
-**Fedi Berrima** — Projet de stage, École SESAME × SMART IT PARTNER
-
 ---
 
 <p align="center"><i>Application intelligente de gestion commerciale — web, mobile et agents IA.</i></p>
