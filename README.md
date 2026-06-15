@@ -25,7 +25,6 @@ SmartSales est une solution **web et mobile** qui permet de gérer les équipes 
 - [Application mobile](#application-mobile)
 - [Comptes de démonstration](#comptes-de-démonstration)
 - [Structure du projet](#structure-du-projet)
-- [Auteur](#auteur)
 
 ---
 
